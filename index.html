@@ -114,7 +114,7 @@
                 }
             },
             created() {
-                axios.get('./assets/data.txt').then((res) => {
+                axios.get('https://benojan.github.io/assets/data.txt').then((res) => {
                     var lines = res.data.split("\r\n")
                     for (var line of lines) {
                         if (line) {
