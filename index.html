@@ -117,7 +117,7 @@
             },
             created() {
                 axios.get('./assets/data.txt').then((res) => {
-                    var lines = res.data.split("\r\n")
+                    var lines = res.data.split("\n")
                     for (var line of lines) {
                         if (line) {
                             var tmp = line.split("\t")
@@ -130,7 +130,7 @@
                             var cat2 = tmp[6]
                             var cat3 = tmp[7]
                             var cat4 = tmp[8]
-                            var explain = tmp[9].replace(/\/\//g, "<br>")
+                            var explain = tmp[9]
                             var example = tmp[10]
                             var area = tmp[11]
                             var other = tmp[12]
