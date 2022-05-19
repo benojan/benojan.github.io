@@ -1,18 +1,221 @@
 <!DOCTYPE html>
-<html lang="UTF-8">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台州方言词语查询网站</title>
-    <link rel="stylesheet" type="text/css" href="/css/main.css">
+    <title>Learn01</title>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="../js/vue.js"></script>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <style type="text/css">
+        .row {
+            margin: 20px auto 10px;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="red">
-        我是red的div
+    <div class="container" id="root">
+        <div class="row">
+            <div class="col-lg-8 col-md-offset-2">
+                <div class="input-group">
+                    <input type="text" class="form-control" v-model="keyword">
+                    <span class="input-group-btn" >
+                        <button class="btn btn-default" type="button">搜索</button>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-8 col-md-offset-4">
+                <div class="checkbox-inline">
+                    <label>
+                        <input type="checkbox" v-model="word">查词
+                    </label>
+                </div>
+                <div class="checkbox-inline">
+                    <label>
+                        <input type="checkbox" v-model="pronounce">查音
+                    </label>
+                </div>
+                <div class="checkbox-inline">
+                    <label>
+                        <input type="checkbox" v-model="explain">查解释
+                    </label>
+                </div>
+                <div class="checkbox-inline">
+                    <label>
+                        <input type="checkbox" v-model="example">查例句
+                    </label>
+                </div>
+                <div class="checkbox-inline">
+                    <label>
+                        <input type="checkbox" v-model="note">查备注
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="row" v-show="keyword">
+            <div class="col-lg-2">
+                <button class="btn btn-default" @click="sortType = 1">按字数升序</button>
+            </div>
+            <div class="col-lg-2">
+                <button class="btn btn-default"  @click="sortType = 2">按词升序</button>
+            </div>
+            <div class="col-lg-2">
+                <button class="btn btn-default"  @click="sortType = 3">按音升序</button>
+            </div>
+        </div>
+        <div class="row" v-show="keyword">
+            <div class="col-lg-12">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>词</th>
+                            <th>音</th>
+                            <th>解释</th>
+                            <th>例句</th>
+                            <th>备注</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="w in fillWord">
+                            <td>{{w.word}}</td>
+                            <td>{{w.pronounce}}</td>
+                            <td>{{w.explain}}</td>
+                            <td>{{w.example}}</td>
+                            <td>{{w.note}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+    <script>
+        Vue.config.productionTip = false // 阻止 vue 在启动时生成生产提示。
+
+        // 创建实例
+        const vm = new Vue({
+            el: "#root",
+            data() {
+                return {
+                    keyword: "",
+                    word: true,
+                    pronounce: true,
+                    explain: false,
+                    example: false,
+                    note: false,
+                    sortType: 0,
+                    dictionary: []
+                }
+            },
+            created() {
+                axios.get('../assets/data.txt').then((res) => {
+                    var lines = res.data.split("\r\n")
+                    for (var line of lines) {
+                        if (line) {
+                            var tmp = line.split("\t")
+                            var length = tmp[0]
+                            var small = tmp[1]
+                            var wrong = tmp[2]
+                            var word = tmp[3]
+                            var pronounce = tmp[4]
+                            var cat1 = tmp[5]
+                            var cat2 = tmp[6]
+                            var cat3 = tmp[7]
+                            var cat4 = tmp[8]
+                            var explain = tmp[9].replace(/\/\//g, "<br>")
+                            var example = tmp[10]
+                            var area = tmp[11]
+                            var other = tmp[12]
+                            var note = tmp[13]
+                            this.dictionary.push({ length, word, pronounce, explain, example, note })
+                        }
+                    }
+                }, (err) => {
+                });
+            },
+            computed: {
+                fillWord () {
+                    var arr = this.dictionary
+                    if (this.keyword) {
+                        arr = this.dictionary.filter((word) => {
+                            var res = false
+                            if (this.word) {
+                                res = res || word.word.indexOf(this.keyword) !== -1
+                            }
+                            if (this.pronounce) {
+                                res = res || word.pronounce.indexOf(this.keyword) !== -1
+                            }
+                            if (this.explain) {
+                                res = res || word.explain.indexOf(this.keyword) !== -1
+                            }
+                            if (this.example) {
+                                res = res || word.example.indexOf(this.keyword) !== -1
+                            }
+                            if (this.note) {
+                                res = res || word.note.indexOf(this.keyword) !== -1
+                            }
+                            return res
+                        })
+
+                        arr.sort((a, b) => {
+                            switch(this.sortType) {
+                                case 1: {
+                                    if (parseInt(a.length) < parseInt(b.length)) return -1;
+                                    else if (parseInt(a.length) > parseInt(b.length)) return 1;
+                                    else {
+                                        if (a.word < b.word) return -1;
+                                        else if (a.word > b.word) return 1;
+                                        else {
+                                            if (a.pronounce < b.pronounce) return -1;
+                                            else if (a.pronounce > b.pronounce) return 1;
+                                            return 0;
+                                        }
+                                    }
+                                }
+                                case 2: {
+                                    if (a.word < b.word) return -1;
+                                    else if (a.word > b.word) return 1;
+                                    else {
+                                        if (a.pronounce < b.pronounce) return -1;
+                                        else if (a.pronounce > b.pronounce) return 1;
+                                        else { 
+                                            if (parseInt(a.length) < parseInt(b.length)) return -1;
+                                            else if (parseInt(a.length) > parseInt(b.length)) return 1;
+                                            return 0;
+                                        }
+                                    }
+                                }
+                                case 3: {
+                                    if (a.pronounce < b.pronounce) return -1;
+                                    else if (a.pronounce > b.pronounce) return 1;
+                                    else {
+                                        if (parseInt(a.length) < parseInt(b.length)) return -1;
+                                        else if (parseInt(a.length) > parseInt(b.length)) return 1;
+                                        else {
+                                            if (a.word < b.word) return -1;
+                                            else if (a.word > b.word) return 1;
+                                            return 0;
+                                        }
+                                    }
+                                }
+                            }
+                        })
+
+                        return arr
+                    }
+                }
+            }
+        })
+
+    </script>
 </body>
 
 </html>
